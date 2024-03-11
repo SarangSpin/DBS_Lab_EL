@@ -96,8 +96,8 @@ displayProducts()
           ))}  */}
           {products.map((product)=>{
      return <ProductElement
-      key={product.id}
-      id={product.id}
+      key={product.product_id}
+      id={product.product_id}
       title={product.prod_name}
       image={`http://localhost:8080/images/${product.prod_type}.jpg`}
       price={product.cost}
