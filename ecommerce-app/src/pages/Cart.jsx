@@ -79,8 +79,8 @@ const Cart = () => {
           <br />
           {cart.map((item)=>{
             return <div>
-              <Link to={`/shop/product?pid=${item.item_id}`}><h2 className="text-4xl max-sm:text-3xl text-accent-content">{item.prod_name}</h2></Link>
-            
+              <Link to={`/shop/product?pid=${item.item_id}`}><h2 className="text-4xl max-sm:text-3xl text-accent-content">{item.prod_name} - {item.quantity}</h2></Link>
+              
             </div>
             
           })}

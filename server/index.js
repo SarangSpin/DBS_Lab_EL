@@ -183,6 +183,8 @@ app.get('/',  (req, res) => {
                 }
                 console.log(data)
                 console.log(135)
+
+                db.collection('views').updateOne({product_id: req.query.pid}, {$inc: {views: 1}}).then((x)=>console.log(x)).catch(err=>console.log(err))
                 res.json({data: data[0], user_id: decoded.customer_id, cart_id: data2[0].cart_id });
                 
             })
@@ -330,6 +332,11 @@ app.get('/',  (req, res) => {
     } )
 });
 
+app.get('/logout', (req,res)=>{
+    res.clearCookie("token");
+    res.json(true)
+})
+
 
 
 app.post('/addToCart', (req, res)=>{
@@ -344,7 +351,24 @@ app.post('/addToCart', (req, res)=>{
             res.json(`Error adding to cart`)
         }
         console.log(data)
-        res.json(data)
+        const q = primary.updateCart(req.body);
+
+        con.query(q, (err, data)=>{
+    
+            if(err) 
+            {
+                console.log(err)
+                res.json(`Error adding  cart`)
+            }
+
+            console.log(data)
+            res.json(data)
+            
+        })
+
+
+        // console.log(data)
+        // res.json(data)
         
     })
 
@@ -382,8 +406,23 @@ app.get('/deleteCart',  (req, res) => {
         }
         console.log(data)
         
+        const q = primary.emptyCart(req.query);
+
+    con.query(q, (err, data)=>{
+
+        if(err) 
+        {
+            console.log(err)
+            res.json(`Error deleting cart`)
+        }
+        console.log(data)
+        
         
         res.json(data);
+        
+    })
+        
+        
         
     })
     
@@ -393,17 +432,33 @@ app.get('/deleteCart',  (req, res) => {
   app.get('/reviews', (req, res)=>{
 
     let result = []
+    console.log(req.query)
 
     db.collection('reviews')
         .find({product_id: req.query.pid})//returns cursor, use toArray forEach
-        .forEach(review =>{
-            result.push(review)
+        .sort()
+        .forEach((x) =>{
+            console.log(x)
+            result.push(x)
         })
         .then(()=>{
             // res.status(200).json(reviews)
             console.log(404)
             console.log(result)
+            res.json(result)
         }).catch(err=>console.log(err))
+    // result = reviews.filter((x)=>{
+    //     console.log(x);
+    //     return x.product_id==req.query.pid;
+    // })
 
-    res.json(result)
+    
+    
   })
+
+
+  app.post('/addReview', (req, res)=>{
+    db.collection('reviews').insertOne({product_id: req.body.product_id, customer_id: req.body.customer_id, review: req.body.review, rating: req.body.rating})
+    .then(()=>{console.log(425); res.json(true)})
+    .catch((err)=>{console.log(426); console.log(err); res.json('Error adding review')}) 
+})

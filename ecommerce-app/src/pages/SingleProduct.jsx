@@ -11,7 +11,8 @@ const SingleProduct = () => {
 
   const queryParams = new URLSearchParams(location.search);
   console.log(queryParams)
-
+ const [newReview, setNewReview] = useState('')
+ const [rating, setRating] = useState(0)
  const [product, setProduct] = useState({})
  const [cart_id, setCartId] = useState(null)
  const [customer_id, setCustomerId] = useState('')
@@ -36,6 +37,7 @@ const SingleProduct = () => {
     {
       console.log(res.data)
       setReview(res.data)
+      
 
     }
     else{
@@ -80,6 +82,37 @@ const SingleProduct = () => {
   }
 
   const navigate = useNavigate();
+
+  const addReview = () => {
+   
+   Axios({
+      method: 'POST',
+      url: `http://localhost:8080/addReview`,
+      withCredentials: true,
+      data: {product_id: product.product_id, rating: rating, review: newReview, customer_id:customer_id}
+  }).then((res)=>{
+  
+    if(res.data == true)
+    {
+      console.log(97)
+      console.log(res.data)
+     toast.success('Added Review')
+     
+     
+    }
+    else{
+      console.log(104)
+      console.log(res.data)
+      toast.error(res.data)
+    }
+  
+    
+  }).catch(err=>{
+    toast.error('Error adding review');
+  })
+
+
+  }
 
   const addToCart = ()=>{
 
@@ -199,6 +232,7 @@ else{
 
           </div>
           <div className="flex flex-row gap-x-2 max-sm:flex-col max-sm:gap-x">
+            
             <button
               className="btn bg-blue-600 hover:bg-blue-500 text-white"
               onClick={() => {
@@ -215,11 +249,27 @@ else{
             <div className="badge bg-gray-700 badge-lg font-bold text-white p-5 mt-2">
               Category: {product?.prod_type}
             </div>
+            <div className="badge bg-gray-700 badge-lg font-bold text-white p-5 mt-2">
+              Add Review:
+              <input type="text" onChange={e=>setNewReview(e.target.value)} />
+              Rating:
+              <input type="number" max={10} min={1} onChange={e=>setRating(e.target.value)} />
+            <br />
+            
+            </div>
+            <input type="submit" onClick={addReview} />
             <div>
+            
+
+              <div className="badge bg-gray-700 badge-lg font-bold text-white p-5 mt-2">Reviews:</div>
             {reviews.map((review)=>{
-              return <div>
-                <div>{review[0].rating}</div>
-                <div>{review[0].review}</div>
+              return <div className="text-xl max-sm:text-lg text-accent-content">
+                <br />
+                <div>{review.rating}/10 - {review.customer_id}</div>
+                <div>{review.review}</div>
+                <br />
+                <br />
+                <br />
               </div>
             })}
           </div>

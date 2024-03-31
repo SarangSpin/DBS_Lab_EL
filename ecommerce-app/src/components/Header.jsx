@@ -8,13 +8,14 @@ import { AiFillShopping } from "react-icons/ai";
 import { FaSun } from "react-icons/fa6";
 import { FaMoon } from "react-icons/fa6";
 import { FaWindowClose } from "react-icons/fa";
-
+import  Axios  from "axios";
 import "../styles/Header.css";
 import { useDispatch, useSelector } from "react-redux";
 import { changeMode } from "../features/auth/authSlice";
 import { store } from "../store";
 import axios from "axios";
 import { clearWishlist, updateWishlist } from "../features/wishlist/wishlistSlice";
+import { toast } from 'react-toastify';
 
 const Header = () => {
   const { amount } = useSelector((state) => state.cart);
@@ -25,7 +26,6 @@ const Header = () => {
   const { darkMode } = useSelector((state) => state.auth);
 
   const loginState = useSelector((state) => state.auth.isLoggedIn);
-
 
   const fetchWishlist = async () => {
     if(loginState){
@@ -53,23 +53,46 @@ const Header = () => {
     
   }, [loginState]);
 
+  const handleSignOut = () => {
+     Axios({
+      method: 'GET',
+      url: 'http://localhost:8080/logout',
+      withCredentials: true,
+  }).then((res)=>{
+
+    if(res.data == true)
+      {
+        toast.success("Logged Out")
+        navigate('/');
+
+      }else{
+        toast.success("Already logged out!")
+        navigate('/');
+      }
+
+    
+  })
+  .catch((err)=>console.log(err));
+
+  }
+
   return (
     <>
       <div className="topbar border-b border-gray-800">
-        <ul>
+        {/* <ul>
           <li>
             <FaHeadphones className="text-2xl max-sm:text-lg text-accent-content" />
             <span className="text-2xl max-sm:text-lg text-accent-content">
               +381 61/123-456
             </span>
           </li>
-          <li>
+          {/* <li>
             <FaRegEnvelope className="text-2xl max-sm:text-lg text-accent-content" />{" "}
             <span className="text-2xl max-sm:text-lg text-accent-content">
               support@test.com
             </span>
-          </li>
-        </ul>
+          </li> 
+        </ul> */}
       </div>
       <div className="navbar bg-base-100 max-w-7xl mx-auto">
         <div className="flex-1">
@@ -78,10 +101,10 @@ const Header = () => {
             className="btn btn-ghost normal-case text-2xl font-black text-accent-content"
           >
             <AiFillShopping />
-            Kuzma Clothing & Shoes
+           Electronic Store
           </Link>
         </div>
-        <div className="flex-none">
+        {/* <div className="flex-none">
           <Link
             to="/search"
             className="btn btn-ghost btn-circle text-accent-content"
@@ -114,7 +137,7 @@ const Header = () => {
             <FaHeart className="text-xl" />
           </Link>
           <div className="dropdown dropdown-end">
-            <label tabIndex={0} className="btn btn-ghost btn-circle">
+            <label tabIndex={0} className="btn btn-ghost btn-circle" >
               <div className="indicator">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -186,7 +209,7 @@ const Header = () => {
               </ul>
             </div>
           )}
-        </div>
+        </div> */}
       </div>
 
       <div className="navbar-bottom-menu border-y border-gray-800">
@@ -216,21 +239,6 @@ const Header = () => {
                   Home
                 </NavLink>
               </li>
-              <li className="text-xl">
-                <NavLink className="text-accent-content" to="/shop">
-                  Shop
-                </NavLink>
-              </li>
-              <li className="text-xl">
-                <NavLink className="text-accent-content" to="/about-us">
-                  About us
-                </NavLink>
-              </li>
-              <li className="text-xl">
-                <NavLink className="text-accent-content" to="/contact">
-                  Contact
-                </NavLink>
-              </li>
               {!isLoggedIn && (
                 <>
                   <li className="text-xl">
@@ -243,6 +251,9 @@ const Header = () => {
                       Register
                     </NavLink>
                   </li>
+                  <li className="text-xl">
+                  <button onClick={handleSignOut}>Sign Out</button>
+                  </li>
                 </>
               )}
             </ul>
@@ -253,15 +264,6 @@ const Header = () => {
           <NavLink className="text-accent-content" to="/">
             Home
           </NavLink>
-          <NavLink className="text-accent-content" to="/shop">
-            Shop
-          </NavLink>
-          <NavLink className="text-accent-content" to="/about-us">
-            About us
-          </NavLink>
-          <NavLink className="text-accent-content" to="/contact">
-            Contact
-          </NavLink>
           {!isLoggedIn && (
             <>
               <NavLink className="text-accent-content" to="/login">
@@ -270,6 +272,7 @@ const Header = () => {
               <NavLink className="text-accent-content" to="/register">
                 Register
               </NavLink>
+              <button onClick={handleSignOut}>Sign Out</button>
             </>
           )}
         </div>
