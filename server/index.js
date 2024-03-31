@@ -11,8 +11,11 @@ const jwt = require('jsonwebtoken');
 const cookieParser = require('cookie-parser');
 const { v4: uuidv4 } = require('uuid');
 const bcrypt = require('bcrypt');
-
+const mongodb = require('mongodb')
 const primary = require('./assets/sql/primary')
+const {connectToDB, getDB} = require('./db.js')
+const { ObjectId } = require('mongodb')
+
 
 const con = mysql.createConnection({
     host: "127.0.0.1",
@@ -20,6 +23,8 @@ const con = mysql.createConnection({
     user: "root",
     password: `${process.env.SQL_PASS}`
   });
+
+
   
 con.connect(function(err) {
     if (err) throw err;
@@ -30,6 +35,50 @@ con.on('error', function(err) {
     console.log("[mysql error]",err);
   });
 
+
+
+  
+
+  let db
+  let reviews = []
+
+connectToDB((err) => {
+  if(!err){
+    db = getDB()
+    
+    db.collection('reviews')
+        .find()//returns cursor, use toArray forEach
+        .sort({rating:1})
+        .forEach(review =>{
+            reviews.push(review)
+        })
+        .then(()=>{
+            // res.status(200).json(reviews)
+            //console.log(reviews)
+        })
+        .catch(()=>{
+            //res.status(500).json({error: 'Could not fetch the documents'})
+            console.log(err)
+        })
+
+    
+  }
+})
+
+
+
+// mongodb.MongoClient.connect("mongodb+srv://riovo211:1234@cluster0.91k7zdk.mongodb.net/")
+// .then((client)=> {
+//     console.log(client.db().collection('review'))
+//     console.log(42)
+//     console.log(client.db)
+    
+//     db = client.db()
+//     console.log(db.collection('reviews').sort().forEach(review=>reviews.push(review)).then(()=>console.log(reviews)).catch((err)=>console.log(err)))
+// })
+// .catch((err)=> console.log(err))
+
+//console.log(db.collection('reviews').find())
 const app = express();
 
 app.use(helmet.crossOriginResourcePolicy({ policy: "cross-origin" }));
@@ -66,7 +115,7 @@ const verifyToken = (req, res, next)=>{
     else{
         jwt.verify(token, process.env.SECRET_KEY, (err, decoded)=>{
             if(err) res.json("Incorrect token")
-            next();
+            else next();
         } )
     }
 }
@@ -111,14 +160,64 @@ app.get('/',  (req, res) => {
             res.json(`Error loading product`)
         }
         console.log(data)
+
+        let token = req.cookies.token;
+    if(!token){
+        console.log(117)
+        res.json({data: data[0], user_id: 'null', cart_id: 'null'})
+    }
+    else{
+        jwt.verify(token, process.env.SECRET_KEY, (err, decoded)=>{
+            if(err) res.json('undefined')
+
+           
+            const q = primary.getCart(decoded);
+            con.query(q, (err, data2)=>{
+
+                if(err) 
+                {
+                    console.log(decoded)
+                    console.log(err)
+                    console.log(130)
+                  //  res.json({data: data[0], user_id: decoded.customer_id, cart_id: 'null' })
+                }
+                console.log(data)
+                console.log(135)
+
+                db.collection('views').updateOne({product_id: req.query.pid}, {$inc: {views: 1}}).then((x)=>console.log(x)).catch(err=>console.log(err))
+                res.json({data: data[0], user_id: decoded.customer_id, cart_id: data2[0].cart_id });
+                
+            })
+
+
+            
+        } )
         
-        res.json(data[0]);
+    }
+        
         
     })
     
 
     
   });
+
+  app.post('/createCart', (req, res)=>{
+    const q = primary.createCart(req.query.customer_id)
+    con.query(q, (err, data)=>{
+
+        if(err) 
+        {
+            console.log(err)
+            res.json(`Error creating cart`)
+        }
+        console.log(data)
+        
+        res.json(data);
+        
+    }) 
+
+  })
   
   app.get('/about', (req, res) => {
     // Render the About component
@@ -131,6 +230,8 @@ app.get('/',  (req, res) => {
     const q = primary.checkSignup(req.body);
     con.query(q, (err, data)=>{
 
+        console.log(181)
+        console.log(data)
         if(err) {
             console.log(err)
             res.json(`error checking user - ${err.stack}`);
@@ -146,7 +247,8 @@ app.get('/',  (req, res) => {
         const p = primary.register({email: req.body.email, name: req.body.name, password: hashedPassword, phone_number: req.body.phone_number, customer_id: req.body.id});
 
         con.query(p, (err, data)=>{
-
+            console.log(199)
+            console.log(data)
             if(err) {
                 console.log(err)
                 res.json(`error inserting user - ${err.stack}`);
@@ -154,7 +256,7 @@ app.get('/',  (req, res) => {
 
              console.log(data)
 
-            const x = primary.createCart(data.customer_id);
+            const x = primary.createCart(req.body.id);
 
             con.query(x, (err, data)=>{
 
@@ -192,7 +294,7 @@ app.get('/',  (req, res) => {
 
         else{
         console.log(data)
-
+        console.log(243)
         bcrypt.compare(req.body.password, data[0].password, (err, result)=>{
             console.log(result);
 
@@ -204,7 +306,7 @@ app.get('/',  (req, res) => {
 
             else if(result){
 
-                let token = jwt.sign({email: req.body.email, customer_id: req.body.customer_id}, process.env.SECRET_KEY, {expiresIn: "5d"});
+                let token = jwt.sign({email: req.body.email, customer_id: data[0].customer_id}, process.env.SECRET_KEY, {expiresIn: "5d"});
                 res.cookie("token", token);
                 res.json(true);
             }
@@ -230,41 +332,133 @@ app.get('/',  (req, res) => {
     } )
 });
 
-app.get('getCart', (req, res)=>{
-
-    const q = primary.getCart(req.body);
-
+app.get('/logout', (req,res)=>{
+    res.clearCookie("token");
+    res.json(true)
 })
+
+
 
 app.post('/addToCart', (req, res)=>{
 
-    const p = primary.getCart(req.body);
+    const q = primary.addToCart(req.body);
 
     con.query(q, (err, data)=>{
 
         if(err) 
         {
             console.log(err)
-            res.json(`Error getting cart info`)
+            res.json(`Error adding to cart`)
         }
         console.log(data)
-        
-        const q = primary.addToCart({cart_id: data.cart_id, quantity: req.body.quantity, product_id: req.product_id});
+        const q = primary.updateCart(req.body);
 
         con.query(q, (err, data)=>{
-
+    
             if(err) 
             {
                 console.log(err)
-                res.json(`Error adding product`)
+                res.json(`Error adding  cart`)
             }
+
             console.log(data)
+            res.json(data)
             
-            res.json('Added Successfully');
-        
-            })
+        })
+
+
+        // console.log(data)
+        // res.json(data)
         
     })
 
     
+})
+
+app.get('/getCart', verifyToken, (req, res)=>{
+
+    const q = primary.cart(req.query.cart_id)
+    con.query(q, (err, data)=>{
+
+        if(err) 
+        {
+            console.log(err)
+            res.json(`Error adding to cart`)
+        }
+        console.log(data)
+        res.json(data)
+        
+    })
+
+
+})
+
+app.get('/deleteCart',  (req, res) => {
+
+    const q = primary.deleteCart(req.query);
+
+    con.query(q, (err, data)=>{
+
+        if(err) 
+        {
+            console.log(err)
+            res.json(`Error deleting cart`)
+        }
+        console.log(data)
+        
+        const q = primary.emptyCart(req.query);
+
+    con.query(q, (err, data)=>{
+
+        if(err) 
+        {
+            console.log(err)
+            res.json(`Error deleting cart`)
+        }
+        console.log(data)
+        
+        
+        res.json(data);
+        
+    })
+        
+        
+        
+    })
+    
+   
+  });
+
+  app.get('/reviews', (req, res)=>{
+
+    let result = []
+    console.log(req.query)
+
+    db.collection('reviews')
+        .find({product_id: req.query.pid})//returns cursor, use toArray forEach
+        .sort()
+        .forEach((x) =>{
+            console.log(x)
+            result.push(x)
+        })
+        .then(()=>{
+            // res.status(200).json(reviews)
+            console.log(404)
+            console.log(result)
+            res.json(result)
+        }).catch(err=>console.log(err))
+    // result = reviews.filter((x)=>{
+    //     console.log(x);
+    //     return x.product_id==req.query.pid;
+    // })
+
+    
+    
+  })
+
+
+  app.post('/addReview', (req, res)=>{
+    db.collection('reviews').insertOne({product_id: req.body.product_id, customer_id: req.body.customer_id, review: req.body.review, rating: req.body.rating})
+    .then(()=>{console.log(425); res.json(true)})
+    .catch((err)=>{console.log(426); console.log(err); res.json('Error adding review')}) 
 })

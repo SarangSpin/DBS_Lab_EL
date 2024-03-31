@@ -16,7 +16,7 @@ import {
   OrderHistory
 } from "./pages";
 //import { landingLoader } from "./pages/Landing";
-import { singleProductLoader } from "./pages/SingleProduct";
+//import { singleProductLoader } from "./pages/SingleProduct";
 import { shopLoader } from "./pages/Shop";
 import { ToastContainer } from "react-toastify";
 
@@ -37,9 +37,9 @@ const router = createBrowserRouter([
 
       },
       {
-        path: "shop/product/:id",
+        path: "shop/product/",
         element: <SingleProduct />,
-        loader: singleProductLoader,
+        // loader: singleProductLoader,
       },
       {
         path: "about",
