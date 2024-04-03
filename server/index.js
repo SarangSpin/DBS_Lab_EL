@@ -139,6 +139,27 @@ app.get('/',  (req, res) => {
         res.json(data);
         
     })
+})
+
+    app.get('/search',  (req, res) => {
+
+        console.log(req.body);
+        console.log(req.query)
+        
+        const q = primary.searchResults(req.query);
+    
+        con.query(q, (err, data)=>{
+    
+            if(err) 
+            {
+                console.log(err)
+                res.json(`Error loading products`)
+            }
+            console.log(data)
+            
+            res.json(data);
+            
+        })
     
    
   });

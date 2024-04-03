@@ -23,6 +23,10 @@ const { v4: uuidv4 } = require('uuid');
         return `SELECT * FROM \`e-commerce\`.products ORDER BY prod_name ASC LIMIT 10 `
     else return `SELECT * FROM \`e-commerce\`.products ORDER BY prod_name DESC LIMIT 10 `
     },
+    searchResults: (params)=>{
+        //return `SELECT * FROM \`e-commerce\`.products ORDER BY prod_name ASC LIMIT 10 `
+        return `SELECT * FROM \`e-commerce\`.products WHERE prod_name LIKE '%${params.prod_name}%' `
+    },
     getCart: (params)=>{
 
         return `SELECT cart_id  FROM \`e-commerce\`.cart WHERE customer_id = '${params.customer_id}'`

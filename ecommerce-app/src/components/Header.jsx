@@ -265,7 +265,10 @@ const Header = () => {
             Home
           </NavLink>
           {!isLoggedIn && (
-            <>
+            <> 
+            <NavLink className="text-accent-content" to="/search">
+            Search
+          </NavLink>
               <NavLink className="text-accent-content" to="/login">
                 Login
               </NavLink>
