@@ -10,6 +10,19 @@ const Cart = () => {
   
   const navigate = useNavigate();
   const [cart, setCart] = useState([])
+  const [sum, setSum] = useState(0)
+
+ async function calculateTotalSum(item)  {
+    if (!item) {
+      return 0;
+    }
+    
+    var total=0
+    for (var i=0; i<item.length; i++){
+      total+= item[i].quantity*item[i].cost
+    }
+    return total
+  }
 
   const deleteCart = async() =>{
     Axios({
@@ -58,6 +71,9 @@ const Cart = () => {
       console.log(res.data)
 
      setCart(res.data)
+
+    calculateTotalSum(res.data).then((val)=>setSum(val))
+     
      
     }
     else{
@@ -79,12 +95,14 @@ const Cart = () => {
           <br />
           {cart.map((item)=>{
             return <div>
-              <Link to={`/shop/product?pid=${item.item_id}`}><h2 className="text-4xl max-sm:text-3xl text-accent-content">{item.prod_name} - {item.quantity}</h2></Link>
+              <Link to={`/shop/product?pid=${item.item_id}`}><h2 className="text-4xl max-sm:text-3xl text-accent-content">{item.prod_name} - {item.quantity}    ------ ${item.quantity*item.cost}</h2></Link>
               
             </div>
             
           })}
+         
           <br />
+          <h2 className="text-4xl max-sm:text-3xl text-accent-content">Total - ${sum}</h2>
           <br />
           <Link to={`/`} onClick={()=>{
                  toast.success('Order Placed! Thank you, cart is empty')

@@ -25,7 +25,7 @@ const { v4: uuidv4 } = require('uuid');
     },
     searchResults: (params)=>{
         //return `SELECT * FROM \`e-commerce\`.products ORDER BY prod_name ASC LIMIT 10 `
-        return `SELECT * FROM \`e-commerce\`.products WHERE prod_name LIKE '%${params.prod_name}%' `
+        return `SELECT * FROM \`e-commerce\`.products WHERE LOWER(prod_name) LIKE '%${params.prod_name}%' `
     },
     getCart: (params)=>{
 
@@ -50,7 +50,11 @@ const { v4: uuidv4 } = require('uuid');
         return `INSERT INTO \`e-commerce\`.cart (cart_id, cart_quantity, customer_id) VALUES ('${uuidv4()}', 0, '${params}')`
     },
     cart: (params)=>{
-        return `SELECT * FROM \`e-commerce\`.cart_item WHERE cart_id='${params}'`
+        //return `SELECT * FROM \`e-commerce\`.cart_item WHERE cart_id='${params}'`
+         return `SELECT ci.*, p.cost
+         FROM \`e-commerce\`.cart_item ci
+         INNER JOIN \`e-commerce\`.products p ON ci.product_id = p.product_id
+         WHERE ci.cart_id = '${params}';`
     },
     deleteCart: (params)=>{
         return `DELETE FROM \`e-commerce\`.cart_item WHERE cart_id='${params.cart_id}'`
