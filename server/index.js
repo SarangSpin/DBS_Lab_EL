@@ -363,6 +363,7 @@ app.get('/logout', (req,res)=>{
 app.post('/addToCart', (req, res)=>{
 
     const q = primary.addToCart(req.body);
+    db.collection('sales').updateOne({product_id: req.body.product_id}, {$inc: {sales_count: 1}}).then((x)=>console.log(x)).catch(err=>console.log(err))
 
     con.query(q, (err, data)=>{
 
@@ -417,6 +418,8 @@ app.get('/getCart', verifyToken, (req, res)=>{
 app.get('/deleteCart',  (req, res) => {
 
     const q = primary.deleteCart(req.query);
+
+
 
     con.query(q, (err, data)=>{
 
@@ -475,6 +478,66 @@ app.get('/deleteCart',  (req, res) => {
 
     
     
+  })
+
+  app.get('/createSales', (req, res)=>{
+    const products = [
+        { product_id: "PRD001", product_name: "iPhone 14 Pro Max", sales_count: 0 },
+        { product_id: "PRD002", product_name: "Galaxy S23 Ultra", sales_count: 0 },
+        { product_id: "PRD003", product_name: "Pixel 7 Pro", sales_count: 0 },
+        { product_id: "PRD004", product_name: "Galaxy Z Fold 4", sales_count: 0 },
+        { product_id: "PRD005", product_name: "OnePlus 11 Pro", sales_count: 0 },
+        { product_id: "PRD006", product_name: "Redmi Note 12 Pro+", sales_count: 0 },
+        { product_id: "PRD007", product_name: "MacBook Pro 14\"", sales_count: 0 },
+        { product_id: "PRD008", product_name: "Galaxy Book 2 Pro 360", sales_count: 0 },
+        { product_id: "PRD009", product_name: "XPS 13 Plus", sales_count: 0 },
+        { product_id: "PRD010", product_name: "VAIO Z", sales_count: 0 },
+        { product_id: "PRD011", product_name: "Surface Laptop Studio", sales_count: 0 },
+        { product_id: "PRD012", product_name: "IdeaPad Flex 5i", sales_count: 0 },
+        { product_id: "PRD013", product_name: "iPad Air (5th Gen)", sales_count: 0 },
+        { product_id: "PRD014", product_name: "Galaxy Tab S8 Ultra", sales_count: 0 },
+        { product_id: "PRD015", product_name: "Surface Pro 8", sales_count: 0 },
+        { product_id: "PRD016", product_name: "Fire HD 10", sales_count: 0 },
+        { product_id: "PRD017", product_name: "LG OLED C2 65\"", sales_count: 0 },
+        { product_id: "PRD018", product_name: "Sony XBR X90K 55\"", sales_count: 0 },
+        { product_id: "PRD019", product_name: "Samsung QN90B 65\"", sales_count: 0 },
+        { product_id: "PRD020", product_name: "TCL 55S535", sales_count: 0 },
+        { product_id: "PRD021", product_name: "Apple AirPods Max", sales_count: 0 },
+        { product_id: "PRD022", product_name: "Sony WH-1000XM5", sales_count: 0 },
+        { product_id: "PRD023", product_name: "Bose QuietComfort 45", sales_count: 0 },
+        { product_id: "PRD024", product_name: "Sennheiser Momentum 3 Wireless", sales_count: 0 },
+        { product_id: "PRD025", product_name: "Sonos One (Gen 2)", sales_count: 0 },
+        { product_id: "PRD026", product_name: "LG XBOOM Go PL7", sales_count: 0 },
+        { product_id: "PRD027", product_name: "Ultimate Ears MEGABOOM 3", sales_count: 0 },
+        { product_id: "PRD028", product_name: "JBL Flip 6", sales_count:0},
+
+    ]
+
+    const validationSchema = {
+        validator: {
+          $jsonSchema: {
+            bsonType: "object",
+            required: ["product_id", "product_name"],
+            properties: {
+              _id: { bsonType: "objectId" },
+              product_id: { bsonType: "string" },
+              product_name: { bsonType: "string" },
+              sales_count: { bsonType: "int", minimum: 0 }
+            }
+          }
+        }
+      };
+       
+       db.createCollection('sales', validationSchema).then((res)=>{
+        console.log(res)
+        collection = db.collection('sales')
+        collection.insertMany(products)
+       });
+       
+  
+      console.log("Sales collection created and populated successfully!");
+  
+  
   })
 
 
